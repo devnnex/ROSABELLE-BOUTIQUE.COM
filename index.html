@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventario | Santana Group</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  
+<!-- =========================
+  NAVBAR
+========================= -->
+<header class="navbar">
+  <div class="nav-left">
+    <img src="images/logo.png" alt="Santana Group" class="logo">
+  </div>
+
+  <nav class="nav-menu">
+    <a class="active" data-view="inventario">Inventario</a>
+    <a data-view="ventas">Ventas</a>
+    <a data-view="analisis">Análisis</a>
+    <!-- <a data-view="agotados">Agotados</a> -->
+    <a data-view="clientes">Clientes</a>
+  </nav>
+</header>
+
+<!-- =========================
+  CONTENIDO
+========================= -->
+<main class="container">
+
+  <!-- =====================
+       VISTA INVENTARIO
+  ====================== -->
+  <section id="view-inventario" class="view active">
+
+    <!-- TITULO -->
+    <div class="page-header">
+      <h1>Inventario</h1>
+
+      <div class="page-actions">
+        <button id="btnNuevo" class="primary">+ Agregar Producto</button>
+        <div class="sell-cart-wrapper"><button class="primary venderSeleccionados" id="btnSellCart" onclick="venderSeleccionados()">Vender seleccionados</button><span id="sellCartBadge" class="sell-cart-badge hidden">0</span></div>
+        <button class="outline">Eliminar Seleccionados (0)</button>
+        <button class="outline">Exportar PDF</button>
+        <button class="outline">Exportar Excel</button>
+      </div>
+    </div>
+
+    <!-- BUSCADOR -->
+    <input
+      type="text"
+      class="search"
+      placeholder="Buscar productos..."
+    />
+
+    <!-- TOTAL -->
+    <div class="total-box">
+      Total Venta: $ <span id="sellTotal">0</span>
+    </div>
+
+    <!-- INVENTARIO -->
+    <section class="glass">
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox"></th>
+            <th>Producto</th>
+            <th>Marca</th>
+            <th>Precio Venta</th>
+            <th style="display:none;">Costo</th>
+            <th style="display:none;">categoria</th>
+            <th style="display:none;">subcategoria</th>
+            <th>Stock</th>
+            <th>Vendidos</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody id="tbody">
+          <!-- JS renderiza aquí -->
+        </tbody>
+      </table>
+    </section>
+
+  </section>
+
+  <!-- =====================
+       VISTA VENTAS
+  ====================== -->
+  <section id="view-ventas" class="view">
+
+    <div class="page-header">
+      <h1 class="ventass">Ventas</h1>
+
+      <div id="ventasKPI" class="ventas-kpi">
+  <!-- Aquí JS inyectará los KPIs de ventas del dia en base al metodo de pago dinámicamente -->
+     </div>
+
+    </div>
+  
+
+  <!-- =========================
+    FILTROS VENTAS
+========================= -->
+  <div class="sales-filters">
+  <select id="filterFecha" style="display: none;">
+    <option value="">Todas las fechas</option>
+    <option value="hoy">Hoy</option>
+    <option value="ayer">Ayer</option>
+    <option value="ultimos7">Últimos 7 días</option>
+    <option value="ultimos30">Últimos 30 días</option>
+  </select>
+  <select id="filterProducto">
+    <option value="">Todos los productos</option>
+  </select>
+  <select id="filterMarca">
+    <option value="">Todas las marcas</option>
+  </select>
+  <select id="filterMetodo1">
+    <option value="">Todos los métodos 1</option>
+  </select>
+  <select id="filterMetodo2">
+    <option value="">Todos los métodos 2</option>
+  </select>
+  </div>
+
+    <section class="glass fade">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Marca</th>
+            <th>Cantidad</th>
+            <th>Total</th>
+            <th>Descuento</th>
+            <th>Método Pago 1</th>
+            <th>Método Pago 2</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+          </tr>
+        </thead>
+
+        <tbody id="salesTbody">
+          <!-- JS -->
+        </tbody>
+      </table>
+    </section>
+  </section>
+
+
+      <!-- =====================
+     VISTA ANALISIS
+====================== -->
+<section id="view-analisis" class="view">
+  
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <h1>Análisis</h1>
+
+    <!-- Selector Mes / Año -->
+    <div class="analysis-filters sales-filters">
+  <select id="analysisMonth"></select>
+  <select id="analysisYear"></select>
+</div>
+  </div>
+
+  <!-- =========================
+   CARDS KPIS
+========================= -->
+  <div class="analysis-grid">
+
+    <div class="analysis-card primary">
+      <h4>Ventas del Mes</h4>
+      <span id="kpiVentas">$0</span>
+    </div>
+
+    <div class="analysis-card success">
+      <h4>Ganancia/Mes con Descuentos</h4>
+      <span id="kpiGanancia">$0</span>
+    </div>
+
+    <div class="analysis-card warning">
+      <h4>Total Descuentos</h4>
+      <span id="kpiDescuentos">$0</span>
+    </div>
+
+    <div class="analysis-card info">
+      <h4>Ventas sin no hubiesen Descuentos</h4>
+      <span id="kpiSinDescuento">$0</span>
+    </div>
+
+  </div>
+
+  <!-- GRID PRINCIPAL -->
+  <div class="analysis-layout">
+
+    <!-- =========================
+      GASTOS 
+     ========================= -->
+    <div class="analysis-card gastos-card">
+      <h3>Gastos del Mes</h3>
+
+      <form id="expenseForm" class="expense-form">
+        <input type="text" id="gastoNombre" placeholder="Nombre del gasto" required>
+        <input type="number" id="gastoValor" placeholder="Valor" required>
+        <button id="btnAgregarGasto">Agregar</button>
+      </form>
+
+      <ul id="expenseList" class="expense-list"></ul>
+
+      <div class="expense-total">
+        Ganancia Neta: <b id="ganancia_neta">$0</b>
+      </div>
+      <div class="expense-total">
+        Pagado en gastos: <b id="totalpagado">$0</b>
+      </div>
+    </div>
+<!-- =========================
+  GRÁFICOS
+========================= -->
+    <div class="analysis-card chart-card">
+      <h3>Ventas por Mes</h3>
+      <canvas id="salesByMonthChart"></canvas>
+    </div>
+
+    <div class="analysis-card chart-card">
+      <h3>Top 10 Productos Vendidos</h3>
+      <canvas id="topProductsChart"></canvas>
+    </div>
+  </div>
+  
+  <!-- =========================
+  ANÁLISIS POR MARCA
+  ========================= -->
+    <div class="analysis-card brand-analysis-card">
+  <h3>Análisis por Marca</h3>
+  <p style="font-size: 14px;"> la inversion disminuye cada que vendes una prenda, asi vas recuperando tu inversion hasta llegar a $0</p>
+  <table id="brandAnalysisTable">
+    <thead>
+      <tr>
+        <th>Marca</th>
+        <th>Productos</th>
+        <th>Vendidos</th>
+        <th>Inversión</th>
+        <th>Ventas</th>
+        <th>Ganancia</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- JS llenará aquí -->
+    </tbody>
+  </table>
+</div>
+
+</section>
+
+
+ <!-- =========================
+  VISTA CLIENTES
+  ========================= -->
+<section id="view-clientes" class="view">
+  <div class="page-header">
+    <h1>Clientes</h1>
+
+   
+
+
+  <!-- ACCIONES Y BUSCADOR -->
+
+    <div class="page-actions">
+      <button id="btnAddClient" class="primary">+ Agregar Cliente</button>
+      <button id="btnDeleteSelected" class="outline">Eliminar seleccionados</button>
+      <input type="text" id="searchClient" placeholder="🔍 Buscar cliente..." />
+    </div>
+  </div>
+
+   <!-- KPIs CLIENTES -->
+<div class="analysis-grid" id="clientsKPIs">
+  <div class="analysis-card primary">
+    <h4>Total de Clientes</h4>
+    <span id="totalClientes">0</span>
+  </div>
+
+
+<div class="analysis-card success">
+  <h4>Próximo cumpleaños</h4>
+  <div id="nextBirthday" class="birthday-kpi">
+    <!-- <button id="prevBirthday" class="kpi-btn">⬅️</button> -->
+    <span id="nextBirthdayInfo" class="small-text">—</span>
+    <!-- <button id="nextBirthday" class="kpi-btn">➡️</button> -->
+    <button id="emailNextBirthday" class="kpi-btn email-btn">📧 Enviar correo</button>
+  </div>
+</div>
+
+
+  <!-- <div class="analysis-card warning">
+    <h4>Cumpleaños este mes</h4>
+    <span id="birthdaysThisMonth">0</span>
+  </div> -->
+</div>
+
+<div class="table-wrapper">
+  <table id="clientsTable">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAllClients"></th>
+        <th>Nombre</th>
+        <th>Teléfono</th>
+        <th>Correo</th>
+        <th>Cumpleaños</th>
+        <th>Registrado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+</section>
+
+
+</main>
+
+<!-- =========================
+  MODAL NUEVO PRODUCTO
+========================= -->
+<div class="modal hidden" id="modal">
+  <form id="form" class="modal-card">
+    <h2>Nuevo Producto</h2>
+
+    <div class="field">
+      <input name="nombre" placeholder=" " required />
+      <label>Nombre *</label>
+    </div>
+
+    <div class="field">
+      <input name="marca" placeholder=" " required />
+      <label>Marca *</label>
+    </div>
+
+    <div class="field">
+      <input name="categoria" placeholder=" " />
+      <label>Categoría</label>
+    </div>
+
+    <div class="field">
+      <input name="subcategoria" placeholder=" " />
+      <label>Subcategoría</label>
+    </div>
+
+    <div class="field">
+      <input type="number" name="costo" placeholder=" " required />
+      <label>Costo por unidad *</label>
+    </div>
+
+    <div class="field">
+      <input type="number" name="margen" placeholder=" " value="100" required />
+      <label>% Margen *</label>
+    </div>
+
+    <div class="field">
+      <input type="number" name="cantidad" placeholder=" " value="1" required />
+      <label>Cantidad *</label>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="ghost" id="btnCancelar">Cancelar</button>
+      <button type="submit">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<!-- =========================
+  MODAL EDITAR PRODUCTO (BÁSICO)
+========================= -->
+<div class="modal hidden" id="editModal">
+  <form id="editForm" class="modal-card">
+    <h2>Editar producto</h2>
+
+    <div class="field">
+      <input name="nombre" placeholder=" " required />
+      <label>Nombre *</label>
+    </div>
+
+    <div class="field">
+      <input name="marca" placeholder=" " required />
+      <label>Marca *</label>
+    </div>
+
+    <div class="field">
+      <input type="number" name="cantidad" placeholder=" " required />
+      <label>Cantidad *</label>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="ghost" id="btnEditCancelar">Cancelar</button>
+      <button type="submit">Guardar cambios</button>
+    </div>
+  </form>
+</div>
+
+
+
+<!-- =========================
+  MODAL PRODUCTOS DE MARCA
+========================= -->
+<div class="modal hidden" id="brandModal">
+  <div class="modal-card">
+    <h2 id="brandModalTitle">Productos de Marca</h2>
+    <p style="font-size: 12px;">La columna ‘Total Inversión’ muestra cuánto de tu inversión inicial queda por recuperar. Cada venta reduce el valor invertido por prenda, lo que te costó. Hasta llegar a cero. Lo demás es ganancia</p>
+    <table id="brandProductsTable">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Stock</th>
+          <th>Costo Unit.</th>
+          <th>Total Inversión</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- JS inyectará los productos aquí -->
+      </tbody>
+    </table>
+    <div class="modal-actions">
+      <button type="button" id="brandModalClose" class="ghost">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- =========================
+  MODAL NUEVO CLIENTE
+========================= -->
+<div class="modal hidden" id="clientModal">
+  <form id="clientForm" class="modal-card two-columns">
+    <h2 id="clientModalTitle">Nuevo Cliente</h2>
+
+    <div class="field">
+      <input id="clientName" name="nombre" placeholder=" " required />
+      <label>Nombre *</label>
+    </div>
+
+    <div class="field">
+      <input id="clientPhone" name="telefono" placeholder=" " />
+      <label>Teléfono</label>
+    </div>
+
+    <div class="field">
+      <input type="email" id="clientEmail" name="correo" placeholder=" " />
+      <label>Correo</label>
+    </div>
+
+    <div class="field">
+      <input type="date" id="clientBirthday" name="fechacumple" placeholder=" " />
+      <label>Fecha de Cumpleaños</label>
+    </div>
+
+    <input type="hidden" id="clientId" /> <!-- campo oculto para editar -->
+
+    <div class="modal-actions">
+      <button type="button" class="ghost" id="clientModalClose">Cancelar</button>
+      <button type="submit">Guardar</button>
+    </div>
+  </form>
+</div>
+
+
+
+
+
+<!-- =========================
+  FOOTER
+========================= -->
+<footer class="footer">
+  © 2025 Santana Group
+</footer>
+
+
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+    emailjs.init("WG36JQzyb-sxnapxf"); // 👈 Reemplaza con tu Public Key de EmailJS
+</script>
+<!-- ✅ SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="analisis.js" defer></script>
+<script src="app.js" defer></script>
+
+<!-- GLOBAL LOADER -->
+<div id="globalLoader" class="loader hidden">
+  <div class="loader-card">
+    <div class="spinner"></div>
+    <span>Cargando información...</span>
+  </div>
+</div>
+
+</body>
+</html>
