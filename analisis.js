@@ -581,6 +581,102 @@ async function renderClients() {
   }
 }
 
+
+
+/* =======================
+   MODAL NUEVO CLIENTE
+======================= */
+
+const btnAddClient = document.getElementById("btnAddClient");
+const clientModal = document.getElementById("clientModal");
+const clientForm = document.getElementById("clientForm");
+
+const clientName = document.getElementById("clientName");
+const clientPhone = document.getElementById("clientPhone");
+const clientEmail = document.getElementById("clientEmail");
+const clientBirthday = document.getElementById("clientBirthday");
+const clientId = document.getElementById("clientId");
+const clientModalTitle = document.getElementById("clientModalTitle");
+const clientModalClose = document.getElementById("clientModalClose");
+
+/* ➕ ABRIR MODAL NUEVO CLIENTE */
+btnAddClient.onclick = () => {
+  clientModal.classList.remove("hidden");
+
+  clientModalTitle.textContent = "Nuevo Cliente";
+
+  clientForm.reset();
+  clientId.value = ""; // 🔑 importante para que NO edite
+};
+
+/* ❌ CERRAR MODAL */
+clientModalClose.onclick = () => {
+  clientModal.classList.add("hidden");
+};
+
+
+/* =======================
+   GUARDAR CLIENTE (CREATE / UPDATE)
+======================= */
+
+clientForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    nombre: clientName.value.trim(),
+    telefono: clientPhone.value.trim(),
+    correo: clientEmail.value.trim(),
+    fechacumple: clientBirthday.value
+  };
+
+  // Validación mínima
+  if (!payload.nombre) {
+    return Swal.fire("Falta nombre", "El nombre es obligatorio", "warning");
+  }
+
+  let action = "create_client";
+
+  // ✏️ EDITAR
+  if (clientId.value) {
+    payload.id = clientId.value;
+    action = "update_client";
+  }
+
+  try {
+    await fetch(API, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        ...payload
+      })
+    });
+
+    clientModal.classList.add("hidden");
+    clientForm.reset();
+    clientId.value = "";
+
+    renderClients(); // 🔄 refrescar tabla
+
+    Swal.fire({
+      icon: "success",
+      title: action === "create_client"
+        ? "Cliente registrado"
+        : "Cliente actualizado",
+      timer: 1600,
+      showConfirmButton: false,
+      background: "#111",
+      color: "#fff"
+    });
+
+  } catch (err) {
+    console.error("Error guardando cliente:", err);
+    Swal.fire("Error", "No se pudo guardar el cliente", "error");
+  }
+});
+
+
 // =======================
 // KPIs CLIENTES
 // =======================
@@ -667,18 +763,58 @@ function attachClientEvents() {
   });
 
   // ELIMINAR
-  document.querySelectorAll(".delete-client").forEach(btn => {
-    btn.onclick = async () => {
-      if (!confirm("¿Eliminar este cliente?")) return;
-      await fetch(API, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete_client", id: btn.dataset.id })
-      });
-      renderClients();
-    };
-  });
+ document.querySelectorAll(".delete-client").forEach(btn => {
+  btn.onclick = async () => {
+
+    const result = await Swal.fire({
+      title: "🗑️ Eliminar cliente",
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+
+      background: "#0b0b0b",
+      color: "#ffffff",
+
+      customClass: {
+        popup: "neo-glass",
+        title: "neo-title",
+        confirmButton: "neo-confirm danger",
+        cancelButton: "neo-cancel"
+      },
+
+      buttonsStyling: false
+    });
+
+    if (!result.isConfirmed) return;
+
+    await fetch(API, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "delete_client",
+        id: btn.dataset.id
+      })
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Cliente eliminado",
+      timer: 1400,
+      showConfirmButton: false,
+      background: "#0b0b0b",
+      color: "#fff",
+      customClass: {
+        popup: "neo-glass-success"
+      }
+    });
+
+    renderClients();
+  };
+});
+
 
   // ENVIAR CORREO
   document.querySelectorAll(".email-client").forEach(btn => {
@@ -792,7 +928,7 @@ async function requestPassword() {
       autocorrect: "off",
     },
     showCancelButton: true,
-    confirmButtonText: "AccEDER",
+    confirmButtonText: "ACCEDER",
     cancelButtonText: "SALIR",
     allowOutsideClick: false,
     allowEscapeKey: false,
