@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzJGdBEFEKfNxJVrM9pSdlT3FiFpHbtJlKXZd3OncKyzlAwTFrpoX6-AkI4aX8StCk/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzuwO_VA6otVBrDxncMejZ4R2FJQILfOkBCSosgEgM2O1cQMNzFRsXphfjedEmTxZMB/exec";
 
 
 
@@ -440,18 +440,24 @@ function renderVentas(data) {
     const descuento = Number(v.descuento || 0);
 
     return `
-      <tr>
-        <td>${v.producto}</td>
-        <td>${v.marca}</td>
-        <td>${v.cantidad}</td>
-        <td>$ ${Number(v.total).toLocaleString("es-CO")}</td>
-        <td class="discount">${descuento > 0 ? `- $ ${descuento.toLocaleString("es-CO")}` : "N/A"}</td>
-        <td>${metodo1}</td>
-        <td>${metodo2}</td>
-        <td>${v.fecha}</td>
-        <td>${v.hora}</td>
-      </tr>
-    `;
+  <tr>
+    <td>${v.producto}</td>
+    <td>${v.marca}</td>
+    <td>${v.cantidad}</td>
+    <td>$ ${Number(v.total).toLocaleString("es-CO")}</td>
+    <td class="discount">${descuento > 0 ? `- $ ${descuento.toLocaleString("es-CO")}` : "N/A"}</td>
+    <td>${metodo1}</td>
+    <td>${metodo2}</td>
+    <td>${v.fecha}</td>
+    <td>${v.hora}</td>
+    <td>
+      <button class="btn-delete-sale"
+        onclick="eliminarVenta('${v.id}')">
+        Eliminar
+      </button>
+    </td>
+  </tr>
+`;
   }).join("");
 }
 
@@ -1825,6 +1831,51 @@ async function eliminarProducto(id) {
   showToast("Producto eliminado correctamente");
   cargarInventario();
 };
+
+/* ======================
+   ELIMINAR VENTA (CON VALIDACIÓN)
+====================== */
+async function eliminarVenta(idVenta) {
+  const ok = confirm(
+    "¿Seguro que deseas eliminar esta venta?\n" +
+    "El stock será restaurado y los KPIs se recalcularán."
+  );
+
+  if (!ok) return;
+
+  try {
+    showLoader("Eliminando venta...");
+
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "delete_sale",
+        id: idVenta
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "No se pudo eliminar la venta");
+    }
+
+    showToast("Venta eliminada correctamente");
+
+    // 🔄 refrescos necesarios
+    await cargarVentas();       // quita la fila
+    await cargarInventario();   // devuelve stock
+    ventasKPIContainer.dataset.force = "1";
+    await actualizarKPIVentas();
+
+  } catch (err) {
+    console.error(err);
+    showToast("Error al eliminar la venta");
+  } finally {
+    hideLoader();
+  }
+}
+
 
 
 
