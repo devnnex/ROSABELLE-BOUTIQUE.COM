@@ -831,22 +831,27 @@ function actualizarTotalGlobalVenta() {
 ====================== */
 window.cambiarQty = function (id, delta) {
 
-  const stock = stockState[id] || 0; // 👈 stock disponible del producto
+  const stock = stockState[id] || 0;
 
-  // 🚫 Si intenta sumar y ya llegó al stock, no hacer nada
   if (delta > 0 && qtyState[id] >= stock) return;
 
   qtyState[id] += delta;
 
   if (qtyState[id] < 0) qtyState[id] = 0;
-
-  // 🔒 Seguridad extra (nunca pasar stock)
   if (qtyState[id] > stock) qtyState[id] = stock;
 
   const span = document.getElementById(`qty-${id}`);
-  if (span) span.textContent = qtyState[id];
+  if (span) {
+    span.textContent = qtyState[id];
 
-  // 🔥 lo que YA funcionaba (NO SE TOCA)
+    // 🔥 EFECTO VISUAL
+    if (qtyState[id] > 0) {
+      span.classList.add("qty-active");
+    } else {
+      span.classList.remove("qty-active");
+    }
+  }
+
   actualizarTotalGlobalVenta();
   updateSellCartBadge();
 };
@@ -1945,4 +1950,5 @@ async function eliminarVenta(idVenta) {
 //     setTimeout(() => toast.remove(), 300);
 //   }, 3000);
 // }
+
 
