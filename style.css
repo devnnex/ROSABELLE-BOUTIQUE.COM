@@ -1770,3 +1770,21 @@ th input[type="checkbox"] {
     0 0 60px rgba(0, 255, 170, 0.7),
     inset 0 0 30px rgba(0, 255, 170, 0.25);
 }
+
+
+/*ESTILOS PARA EL CONTADOR DE CANTIDADES CUANDO SEA MAYOR A 0*/
+.qty span {
+  display: inline-block;
+  min-width: 24px;
+  text-align: center;
+  border-radius: 6px;
+  padding: 2px 6px;
+  transition: all 0.2s ease;
+}
+
+.qty span.qty-active {
+  background: #ff2d2d;
+  color: #ffffff;
+  font-weight: 700;
+}
+
