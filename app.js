@@ -220,6 +220,13 @@ async function cargarInventario() {
     const res = await fetch(`${API_URL}?action=list`);
     const data = await res.json();
 
+    // 🔠 ORDENAR INVENTARIO ALFABÉTICAMENTE POR NOMBRE (A–Z)
+    data.sort((a, b) => {
+      const nombreA = (a.nombre || "").toLowerCase().trim();
+      const nombreB = (b.nombre || "").toLowerCase().trim();
+      return nombreA.localeCompare(nombreB, "es");
+    });
+
     tbody.innerHTML = data.map(p => {
 
       // 🔒 Normalización local (anti-NaN)
@@ -237,11 +244,9 @@ async function cargarInventario() {
       stockState[p.id] = stock;
 
       setTimeout(() => updateStockUI(p.id));
-      
+
       const esNuevo = isProductoNuevo(p.fecha);
       const tiempoNuevo = esNuevo ? tiempoDesde(p.fecha) : "";
-
-
 
       return `
         <tr
@@ -252,10 +257,10 @@ async function cargarInventario() {
           <td><input type="checkbox" class="row-check"></td>
 
           <td>
-          <div class="product-name">
-          ${p.nombre}
-          ${esNuevo ? `<div class="product-new-time">${tiempoNuevo}</div>` : ""}
-          </div>
+            <div class="product-name">
+              ${p.nombre}
+              ${esNuevo ? `<div class="product-new-time">${tiempoNuevo}</div>` : ""}
+            </div>
           </td>
 
           <td>${p.marca}</td>
@@ -268,14 +273,15 @@ async function cargarInventario() {
           </td>
           <td style="display:none;">${p.categoria}</td>
           <td style="display:none;">${p.subcategoria}</td>
-          <!-- fin de ocultos pero seguros -->
+          <!-- fin de ocultos -->
 
           <td class="stock-cell" id="stock-${p.id}">
-          ${stock > 0 
-          ? stock 
-          : '<span class="stock-out">Agotado</span>'
-  }
-</td>
+            ${
+              stock > 0
+                ? stock
+                : '<span class="stock-out">Agotado</span>'
+            }
+          </td>
 
           <td style="color:#00ff88">${p.vendidos}</td>
 
@@ -304,6 +310,7 @@ async function cargarInventario() {
 
   updateSellCartBadge();
 }
+
 
 cargarInventario();
 
@@ -1938,3 +1945,4 @@ async function eliminarVenta(idVenta) {
 //     setTimeout(() => toast.remove(), 300);
 //   }, 3000);
 // }
+
