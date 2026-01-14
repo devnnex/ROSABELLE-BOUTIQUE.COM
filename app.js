@@ -311,8 +311,42 @@ async function cargarInventario() {
   updateSellCartBadge();
 }
 
-
 cargarInventario();
+
+
+
+// 🔍 BUSCADOR DE INVENTARIO
+function filtrarInventario(texto) {
+  const query = texto.toLowerCase().trim();
+  const rows = tbody.querySelectorAll("tr");
+
+  rows.forEach(row => {
+    const nombre = row.children[1]?.textContent.toLowerCase() || "";
+    const marca = row.children[2]?.textContent.toLowerCase() || "";
+
+    // columnas ocultas pero existentes
+    const categoria = row.children[5]?.textContent.toLowerCase() || "";
+    const subcategoria = row.children[6]?.textContent.toLowerCase() || "";
+
+    const match =
+      nombre.includes(query) ||
+      marca.includes(query) ||
+      categoria.includes(query) ||
+      subcategoria.includes(query);
+
+    row.style.display = match ? "" : "none";
+  });
+}
+
+// 🔌 EVENTO DEL INPUT .search
+const searchInput = document.querySelector(".search");
+
+if (searchInput) {
+  searchInput.addEventListener("input", e => {
+    filtrarInventario(e.target.value);
+  });
+}
+
 
 
 /* ======================
@@ -1950,5 +1984,6 @@ async function eliminarVenta(idVenta) {
 //     setTimeout(() => toast.remove(), 300);
 //   }, 3000);
 // }
+
 
 
