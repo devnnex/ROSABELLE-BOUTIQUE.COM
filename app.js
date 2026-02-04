@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbxF_CypHQhAK3FNuS34Z6_-TLxf_K3A2tzlDEFkHSX7zpMgf-Buk8oEo5EyO3_nkMef/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx2t8FQ0u1iGzs4DkORn5iGKq4Hbt5-HAihCoHZNsen0b1X0ugBZs7_QqkZ71kq46Ik/exec";
 
 
 
@@ -219,6 +219,9 @@ async function cargarInventario() {
 
     const res = await fetch(`${API_URL}?action=list`);
     const data = await res.json();
+
+    // 👇 GUARDAMOS INVENTARIO GLOBAL
+    window.inventario = data;
 
     // 🔠 ORDENAR INVENTARIO ALFABÉTICAMENTE POR NOMBRE (A–Z)
     data.sort((a, b) => {
@@ -1700,6 +1703,12 @@ function updateSellCartBadge() {
   badge.classList.remove("bump");
   void badge.offsetWidth; // force reflow
   badge.classList.add("bump");
+
+   //  Llamando a la funcion que replica todo igual en el carrito flotante
+ if (window.syncSellBadge) {
+  syncSellBadge();
+}
+
 }
 
 
@@ -1922,12 +1931,339 @@ async function eliminarVenta(idVenta) {
   }
 }
 
+/* ==================================================
+   👀 OBSERVADOR: BOTÓN VENDER SELECCIONADOS (FLOAT)
+================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+
+  const btnNormal = document.getElementById("btnSellCart");
+  const btnFloating = document.getElementById("btnSellFloating");
+
+  const badgeNormal = document.getElementById("sellCartBadge");
+  const badgeFloating = document.getElementById("sellFloatingBadge");
+
+  const headerActions = document.querySelector(".page-actions");
+
+  if (!btnNormal || !btnFloating || !badgeNormal || !badgeFloating || !headerActions) {
+    console.warn("Botón vender / badges no encontrados");
+    return;
+  }
+
+  /* =========================
+     🔁 SINCRONIZAR BADGE FLOAT
+  ========================= */
+  window.syncSellBadge = function () {
+    const value = parseInt(badgeNormal.textContent, 10) || 0;
+
+    badgeFloating.textContent = value;
+
+    if (value <= 0) {
+      badgeFloating.classList.add("hidden");
+      btnFloating.classList.remove(
+        "has-items",
+        "glow",
+        "nebula"
+      );
+      return;
+    }
+
+    // mostrar badge
+    badgeFloating.classList.remove("hidden");
+
+    // 🔮 activar modo místico
+    btnFloating.classList.add("has-items", "glow", "nebula");
+
+    // ✨ bump animado
+    badgeFloating.classList.remove("bump");
+    void badgeFloating.offsetWidth;
+    badgeFloating.classList.add("bump");
+  };
+
+  /* =========================
+     👁️ OBSERVER VISIBILIDAD
+  ========================= */
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        btnFloating.classList.add("hidden");
+      } else {
+        btnFloating.classList.remove("hidden");
+        syncSellBadge(); // asegura estado correcto
+      }
+    },
+    { threshold: 0.15 }
+  );
+
+  observer.observe(headerActions);
+});
+
+/* =============================================================================================================================
+   MODAL: PRENDAS RECIENTES (AGREGADAS O MODIFICADAS)
+============================================================================================================================= */
+
+function openRecentProductsModal(hours = 48) {
+  const modal = document.getElementById("recentProductsModal");
+  if (!modal) return;
+
+  modal.classList.remove("hidden");
+  renderRecentProducts(hours);
+}
+
+function closeRecentProductsModal() {
+  document.getElementById("recentProductsModal")?.classList.add("hidden");
+}
+
+
+// RENDERIZA PRODUCTOS MODIFICADOS / AGREGADOS EN LAS ÚLTIMAS X HORAS
+function renderRecentProducts(hours = 48) {
+  const tbody = document.getElementById("recentProductsTbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (!Array.isArray(window.inventario)) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align:center; opacity:.6">
+          Inventario no disponible
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const now = Date.now();
+  const limit = hours * 60 * 60 * 1000;
+
+  const dias = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+  const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+  const recientes = window.inventario.filter(p => {
+    if (!p.fecha) return false;
+    const fechaProducto = new Date(p.fecha).getTime();
+    return now - fechaProducto <= limit;
+  });
+
+  if (!recientes.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align:center; opacity:.6">
+          No hay prendas recientes
+        </td>
+      </tr>
+    `;
+    updateNotesBadge(0);
+    return;
+  }
+
+  recientes.forEach(p => {
+    const fecha = new Date(p.fecha);
+
+    const diaSemana = dias[fecha.getDay()];
+    const dia = fecha.getDate();
+    const mes = meses[fecha.getMonth()];
+    const año = fecha.getFullYear();
+
+    let horas = fecha.getHours();
+    const minutos = fecha.getMinutes().toString().padStart(2, "0");
+    const ampm = horas >= 12 ? "PM" : "AM";
+
+    horas = horas % 12 || 12;
+
+    const fechaBonita = `${diaSemana} ${dia} ${mes} ${año} ${horas}:${minutos} ${ampm}`;
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td class="recent-product-name">${p.nombre}</td>
+      <td>${p.marca}</td>
+      <td style="text-align:right;">${Number(p.stock) || 0}</td>
+      <td>
+        <div class="recent-date">
+          <span>${fechaBonita}</span>
+          <span class="badge-new">Nuevo</span>
+        </div>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  updateNotesBadge(recientes.length);
+}
+
+
+
+// BADGE VERDE DE NOTAS
+function updateNotesBadge(count) {
+  const badges = document.querySelectorAll(".js-notes-badge");
+
+  badges.forEach(badge => {
+    badge.textContent = count;
+    badge.classList.toggle("hidden", count === 0);
+  });
+}
+
+
+/* ==================================================
+   EXPORTAR TABLA INVENTARIO A PDF (HTML REAL)
+================================================== */
+
+/* ==================================================
+   EXPORTAR INVENTARIO A PDF (HTML PURO)
+================================================== */
+
+/* ==================================================
+   EXPORTAR INVENTARIO A PDF (HTML PURO - BLANCO)
+================================================== */
+
+function exportInventoryTablePDF() {
+  const table = document.getElementById("inventoryTable");
+
+  if (!table) {
+    alert("No se encontró la tabla de inventario");
+    return;
+  }
+
+  // 🔹 Clonamos la tabla
+  const tableClone = table.cloneNode(true);
+
+  // 🔹 Quitamos columnas que no sirven en PDF
+  stripPdfColumns(tableClone);
+
+  // 🔹 Forzamos estilos de tabla para PDF
+  tableClone.style.width = "100%";
+  tableClone.style.borderCollapse = "collapse";
+  tableClone.style.background = "#ffffff";
+  tableClone.style.color = "#000000";
+
+  tableClone.querySelectorAll("th, td").forEach(cell => {
+    cell.style.color = "#000";
+    cell.style.background = "#fff";
+    cell.style.border = "1px solid #ccc";
+    cell.style.fontSize = "12px";
+    cell.style.padding = "6px 8px";
+  });
+
+  tableClone.querySelectorAll("th").forEach(th => {
+    th.style.background = "#f2f2f2";
+    th.style.fontWeight = "600";
+  });
+
+  // 🔹 Contenedor PDF
+  const pdfContainer = document.createElement("div");
+  pdfContainer.style.background = "#ffffff";
+  pdfContainer.style.color = "#000000";
+  pdfContainer.style.padding = "20px";
+  pdfContainer.style.fontFamily = "Arial, sans-serif";
+
+  pdfContainer.innerHTML = `
+    <h2 style="margin:0 0 4px 0; color:#000;">Inventario</h2>
+    <div style="font-size:11px; color:#444; margin-bottom:12px;">
+      Generado el ${new Date().toLocaleString("es-ES")}
+    </div>
+  `;
+
+  pdfContainer.appendChild(tableClone);
+
+  // 🔹 Configuración PDF
+  const options = {
+    margin: 0.4,
+    filename: `Inventario_${new Date().toISOString().slice(0,10)}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      backgroundColor: "#ffffff"
+    },
+    jsPDF: {
+      unit: "in",
+      format: "letter",
+      orientation: "landscape"
+    }
+  };
+
+  html2pdf().set(options).from(pdfContainer).save();
+}
 
 
 
 
+function stripPdfColumns(table) {
+  const headers = table.querySelectorAll("thead th");
+  const removeIndexes = [];
+
+  headers.forEach((th, index) => {
+    const text = th.textContent.toLowerCase();
+    if (
+      th.querySelector("input") ||
+      text.includes("acciones")
+    ) {
+      removeIndexes.push(index);
+    }
+  });
+
+  table.querySelectorAll("tr").forEach(row => {
+    [...removeIndexes].reverse().forEach(i => {
+      if (row.children[i]) {
+        row.children[i].remove();
+      }
+    });
+  });
+}
 
 
+
+// function buildPdfHtmlDocument(tableHtml) {
+//   const today = new Date().toLocaleDateString("es-ES");
+
+//   return `
+// <!DOCTYPE html>
+// <html lang="es">
+// <head>
+// <meta charset="UTF-8">
+// <title>Inventario PDF</title>
+// <style>
+//   body {
+//     font-family: Inter, Arial, sans-serif;
+//     padding: 20px;
+//   }
+//   h1 {
+//     font-size: 18px;
+//     margin-bottom: 6px;
+//   }
+//   .meta {
+//     font-size: 12px;
+//     color: #666;
+//     margin-bottom: 14px;
+//   }
+//   table {
+//     width: 100%;
+//     border-collapse: collapse;
+//     font-size: 12px;
+//   }
+//   th {
+//     background: #f2f2f2;
+//     text-align: left;
+//     padding: 6px;
+//     border-bottom: 1px solid #ccc;
+//   }
+//   td {
+//     padding: 6px;
+//     border-bottom: 1px solid #e0e0e0;
+//   }
+// </style>
+// </head>
+// <body>
+
+// <h1>Inventario – Exportación PDF</h1>
+// <div class="meta">Generado el ${today}</div>
+
+// ${tableHtml}
+
+// </body>
+// </html>
+// `;
+// }
 
 
 
@@ -1984,7 +2320,6 @@ async function eliminarVenta(idVenta) {
 //     setTimeout(() => toast.remove(), 300);
 //   }, 3000);
 // }
-
 
 
 
