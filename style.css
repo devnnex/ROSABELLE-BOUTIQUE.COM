@@ -1,3 +1,4 @@
+
 :root {
   --glass: rgba(255,255,255,0.08);
   --border: rgba(255,255,255,0.15);
@@ -14,6 +15,8 @@ body {
   background: radial-gradient(circle at top, #0f172a, #000);
   color: white;
   min-height: 100vh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ===============================
@@ -959,18 +962,21 @@ th input[type="checkbox"] {
 
 /* GASTOS */
 .gastos-card {
-  grid-row: span 2;
-  background: rgba(255,255,255,0.05);
+  grid-row: span 9;
+  grid-column: span 2;
+  /* background: rgba(255,255,255,0.05); */
   backdrop-filter: blur(25px) saturate(180%);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 15px 40px rgba(0,0,0,0.1);
   border: 1px solid rgba(255,255,255,0.15);
+  overflow-x: auto;
+  width: 100%;
 }
 
 /* FORMULARIO DE GASTOS */
 .expense-form {
-  display: flex;
+  display: flow;
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -984,6 +990,8 @@ th input[type="checkbox"] {
   color: #fff;
   backdrop-filter: blur(12px);
   font-weight: 500;
+  margin-bottom: 10px;
+  overflow-y: auto;
 }
 
 .expense-form button {
@@ -1033,7 +1041,10 @@ th input[type="checkbox"] {
   backdrop-filter: blur(25px) saturate(180%);
   box-shadow: 0 15px 40px rgba(0,0,0,0.1);
   border: 1px solid rgba(255,255,255,0.15);
+  grid-column: span 2;
 }
+
+.analysis-card.chart-card {}
 
 .chart-card h3 {
   color: #fff;
@@ -1231,6 +1242,7 @@ th input[type="checkbox"] {
   flex-direction: column;
   gap: 0.8rem;             /* Espacio entre título y tabla */
   overflow: hidden;
+  overflow-x: auto;
 }
 
 /* Título del modal */
@@ -1788,3 +1800,368 @@ th input[type="checkbox"] {
   font-weight: 700;
 }
 
+
+/* ==================================================
+   🟦 BOTÓN FLOTANTE VENDER SELECCIONADOS
+================================================== */
+
+.sell-floating {
+  position: fixed;
+  bottom: 24px;
+  right: 16px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent); /* azul */
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 14px 35px rgba(10,132,255,0.55);
+  z-index: 999;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+/* Hover premium */
+.sell-floating:hover {
+  transform: scale(1.08);
+}
+
+/* Badge adaptado al botón flotante */
+.sell-floating .sell-cart-badge {
+  top: -4px;
+  right: -4px;
+}
+
+/* Oculto real */
+.sell-floating.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.6);
+}
+
+
+
+/* ==================================================
+      BOTÓN FLOTANTE VENDER SELECCIONADOS
+================================================== */
+.sell-floating-notes {
+  background: #22c55e; /* verde */
+  bottom: 100px;       /* queda debajo del carrito */
+}
+
+.sell-floating-notes:hover {
+  background: #16a34a;
+}
+
+/* =========================
+   MODAL PRENDAS RECIENTES
+========================= */
+/* =========================
+   MODAL PRENDAS RECIENTES
+========================= */
+/* =========================
+   MODAL PRENDAS RECIENTES
+========================= */
+
+#recentProductsModal .modal-card {
+  background: rgba(20, 20, 22, 0.88);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-radius: 18px;
+  padding: 20px 22px;
+
+  width: 54%;
+  max-width: 760px;
+  max-height: 80vh;
+
+  display: flex;
+  flex-direction: column;
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+#recentProductsModal .modal-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+#recentProductsModal .modal-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255,255,255,.95);
+}
+
+#recentProductsModal .modal-subtitle {
+  font-size: 13px;
+  opacity: .6;
+}
+
+
+/* =========================
+   CONTENEDOR SCROLL TABLA
+========================= */
+
+#recentProductsModal .table-wrapper {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  padding-right: 4px;
+}
+
+/* scrollbar suave */
+#recentProductsModal .table-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+#recentProductsModal .table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.18);
+  border-radius: 6px;
+}
+
+
+/* =========================
+   TABLA
+========================= */
+
+#recentProductsModal table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+/* HEADERS */
+#recentProductsModal th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  position: sticky;
+  top: 0;
+  background: rgba(20, 20, 22, 0.96);
+  backdrop-filter: blur(8px);
+  z-index: 1;
+}
+
+/* CELDAS */
+#recentProductsModal td {
+  padding: 14px 8px;
+  font-size: 14px;
+  color: rgba(255,255,255,.9);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  vertical-align: top;
+}
+
+
+/* =========================
+   PRODUCTO (BREAK LINE)
+========================= */
+
+#recentProductsModal .recent-product-name {
+  font-weight: 500;
+  line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+
+/* =========================
+   STOCK
+========================= */
+
+#recentProductsModal td:nth-child(3) {
+  font-weight: 500;
+  text-align: right;
+  padding-right: 14px;
+  white-space: nowrap;
+}
+
+
+/* =========================
+   FECHA + BADGE
+========================= */
+
+#recentProductsModal .recent-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255,255,255,.6);
+  white-space: nowrap;
+}
+
+
+/* =========================
+   HOVER
+========================= */
+
+#recentProductsModal tr {
+  transition: background .18s ease;
+}
+
+#recentProductsModal tr:hover {
+  background: rgba(255,255,255,.045);
+}
+
+
+/* =========================
+   BADGE "NUEVO"
+========================= */
+
+#recentProductsModal .badge-new {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #34c759, #28a745);
+  color: #fff;
+  box-shadow:
+    0 0 6px rgba(52,199,89,.6),
+    inset 0 1px 0 rgba(255,255,255,.35);
+}
+
+
+/* =========================
+   BOTÓN FLOTANTE NOTAS
+========================= */
+
+.sell-floating-notes {
+  background: linear-gradient(180deg, #34c759, #28a745);
+  color: #fff;
+  box-shadow:
+    0 8px 22px rgba(52,199,89,.35),
+    inset 0 1px 0 rgba(255,255,255,.35);
+}
+
+.sell-floating-notes:hover {
+  box-shadow:
+    0 12px 32px rgba(52,199,89,.55),
+    inset 0 1px 0 rgba(255,255,255,.45);
+  transform: translateY(-1px);
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1024px) {
+  #recentProductsModal .modal-card {
+    width: 72%;
+  }
+}
+
+@media (max-width: 640px) {
+  #recentProductsModal .modal-card {
+    width: 92%;
+    padding: 16px;
+  }
+
+  #recentProductsModal th,
+  #recentProductsModal td {
+    padding: 10px 6px;
+  }
+
+  #recentProductsModal .modal-header h2 {
+    font-size: 16px;
+  }
+}
+
+
+.report-card {
+  margin-bottom: 22px;
+}
+
+.report-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.report-controls select {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+.btn-report {
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-report.excel {
+  background: linear-gradient(180deg, #34c759, #28a745);
+  color: #fff;
+}
+
+.btn-report.pdf {
+  background: linear-gradient(180deg, #ff9500, #ff7a00);
+  color: #fff;
+}
+
+
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.kpi-actions button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.kpi-actions button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.kpi-actions button:active {
+  transform: scale(0.95);
+}
+
+
+
+
+/* BADGE NOTAS */
+/* .sell-floating-notes .sell-cart-badge {
+  background: #ffffff;
+  color: #1c1c1e;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+} */
