@@ -68,7 +68,7 @@
         <button id="btnNuevo" class="primary">+ Agregar Producto</button>
         <div class="sell-cart-wrapper"><button class="primary venderSeleccionados" id="btnSellCart" onclick="venderSeleccionados()">Vender seleccionados</button><span id="sellCartBadge" class="sell-cart-badge hidden">0</span></div>
         <button class="outline">Eliminar Seleccionados (0)</button>
-        <button class="outline">Exportar PDF</button>
+        <button class="outline" onclick="exportInventoryTablePDF()">Exportar PDF</button>
         <button class="outline">Exportar Excel</button>
       </div>
     </div>
@@ -87,7 +87,7 @@
 
     <!-- INVENTARIO -->
     <section class="glass">
-      <table>
+      <table id="inventoryTable">
         <thead>
           <tr>
             <th><input type="checkbox"></th>
@@ -152,7 +152,7 @@
   </div>
 
     <section class="glass fade">
-      <table>
+      <table id="salesTable">
         <thead>
           <tr>
             <th>Producto</th>
@@ -180,7 +180,40 @@
      VISTA ANALISIS
 ====================== -->
 <section id="view-analisis" class="view">
-  
+  <!-- =========================
+  REPORTES
+========================= -->
+<div class="analysis-card report-card">
+
+  <h3>📊 Reportes</h3>
+
+  <div class="report-controls">
+
+    <select id="reportSheet">
+      <option value="inventario">Inventario</option>
+      <option value="ventas">Ventas</option>
+    </select>
+
+    <!-- <select id="reportMonth">
+      <option value="">Todos los meses</option>
+    </select> -->
+
+    <!-- <select id="reportYear">
+      <option value="">Todos los años</option>
+    </select> -->
+
+    <button class="btn-report excel" onclick="downloadReport('excel')">
+      📥 Excel
+    </button>
+
+    <!-- <button class="btn-report pdf" onclick="downloadReport('pdf')">
+      📄 PDF
+    </button> -->
+
+  </div>
+
+</div>
+
 
   <!-- HEADER -->
   <div class="page-header">
@@ -214,9 +247,22 @@
     </div>
 
     <div class="analysis-card info">
-      <h4>Sugerido a Invertir</h4>
-      <span id="kpiSinDescuento">$0</span>
+  <div class="kpi-header">
+    <h4>Sugerido a Invertir</h4>
+
+    <div class="kpi-actions">
+      <button id="resetInvestmentBtn" title="Confirmar inversión">
+        ♻️
+      </button>
+      <button id="revertInvestmentBtn" title="Revertir">
+        ↩️
+      </button>
     </div>
+  </div>
+
+  <span id="kpiSinDescuento">$0</span>
+</div>
+
 
   </div>
 
@@ -494,6 +540,75 @@
 </div>
 
 
+<!-- =========================
+  MODAL PRENDAS RECIENTES
+========================= -->
+<div class="modal hidden" id="recentProductsModal">
+  <div class="modal-card">
+
+    <!-- HEADER ARRIBA DE LA TABLA -->
+    <div class="modal-header">
+      <h2>📝 Prendas Agregadas recientes</h2>
+      <span class="modal-subtitle">Últimas 24 horas</span>
+    </div>
+    <br>
+    <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Marca</th>
+          <th>Stock</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody id="recentProductsTbody">
+        <!-- JS -->
+      </tbody>
+    </table>
+    </div>
+ <br>
+    <div class="modal-actions">
+      <button type="button" class="ghost" onclick="closeRecentProductsModal()">
+        Cerrar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+<!-- ===============================
+     BOTÓN FLOTANTE VENDER (OCULTO POR DEFECTO)
+=============================== -->
+<button
+  id="btnSellFloating"
+  class="sell-floating"
+  onclick="venderSeleccionados()"
+  aria-label="Vender seleccionados"
+>
+  🛒
+  <span id="sellFloatingBadge" class="sell-cart-badge hidden">0</span>
+</button>
+
+ 
+<!-- ===============================
+     BOTÓN FLOTANTE NUEVAS PRENDAS (24H O 48H CAMBIA EL VALOR DEL PARAMETRO)
+=============================== -->
+<button
+  class="sell-floating sell-floating-notes"
+  onclick="openRecentProductsModal(24)"
+  aria-label="Prendas recientes"
+>
+  📝
+  
+</button>
+
 
 
 
@@ -506,6 +621,7 @@
 
 
 <!-- JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>
     emailjs.init("WG36JQzyb-sxnapxf"); // 👈 Reemplaza con tu Public Key de EmailJS
