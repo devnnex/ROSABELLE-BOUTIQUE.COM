@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwfLGLAXDP92AHEJdaeGFj9Hrko15Gbia651LTtS-hGHVyNdJVvDxenQ9F-cVOFw56l/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbymsqqLVamHZedjgJwtANAFfcbVCCR-R8Lh_GUwQC8lv99RikW85xhlIiGYHTg7C4LZ/exec";
 
 
 
@@ -9,6 +9,13 @@ const form = document.getElementById("form");
 const editModal = document.getElementById("editModal");
 const editForm = document.getElementById("editForm");
 const btnEditCancelar = document.getElementById("btnEditCancelar");
+
+const btnDeleteSelected = document.getElementById("btnDeleteInventorySelected");
+const selectAllInventory = document.getElementById("selectAllInventory");
+
+btnDeleteSelected.addEventListener("click", eliminarSeleccionadosInventario);
+
+
 
 
 /* ======================
@@ -312,9 +319,36 @@ async function cargarInventario() {
   }
 
   updateSellCartBadge();
+
+  // ======================
+// CHECKBOX INVENTARIO
+// ======================
+const rowChecks = document.querySelectorAll(".row-check");
+
+rowChecks.forEach(check => {
+  check.addEventListener("change", updateDeleteSelectedUI);
+});
+
+// reset UI
+if (selectAllInventory) selectAllInventory.checked = false;
+updateDeleteSelectedUI();
+
 }
 
 cargarInventario();
+
+
+// FUNCIONALIDAD SELECT ALL INVENTORY
+if (selectAllInventory) {
+  selectAllInventory.addEventListener("change", e => {
+    const checked = e.target.checked;
+    document.querySelectorAll(".row-check").forEach(c => {
+      c.checked = checked;
+    });
+    updateDeleteSelectedUI();
+  });
+}
+
 
 
 
@@ -349,6 +383,82 @@ if (searchInput) {
     filtrarInventario(e.target.value);
   });
 }
+
+// ACTUALIZAR BOTÓN ELIMINAR SELECCIONADOS
+function updateDeleteSelectedUI() {
+  const checks = document.querySelectorAll(".row-check");
+  const selected = Array.from(checks).filter(c => c.checked);
+
+  const count = selected.length;
+
+  btnDeleteSelected.textContent = `Eliminar seleccionados (${count})`;
+  btnDeleteSelected.disabled = count === 0;
+}
+
+
+
+// ELIMINAR PRODUCTOS SELECCIONADOS
+async function eliminarSeleccionadosInventario() {
+  const rows = document.querySelectorAll("tbody tr");
+  const ids = [];
+
+  rows.forEach(row => {
+    const check = row.querySelector(".row-check");
+    if (check && check.checked) {
+      ids.push(row.dataset.id);
+    }
+  });
+
+  if (!ids.length) {
+    await Swal.fire({
+      icon: "info",
+      title: "Sin selección",
+      text: "No has seleccionado ningún producto",
+      confirmButtonText: "Aceptar"
+    });
+    return;
+  }
+
+  const { isConfirmed } = await Swal.fire({
+    title: "Eliminar productos",
+    text: `¿Seguro que deseas eliminar ${ids.length} producto(s)? Esta acción no se puede deshacer.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Eliminar",
+    cancelButtonText: "Cancelar"
+  });
+
+  if (!isConfirmed) return;
+
+  showLoader("Eliminando productos...");
+
+  try {
+    // Misma lógica que eliminarProducto(id)
+    for (const id of ids) {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "delete",
+          id
+        })
+      });
+    }
+
+    showToast(`${ids.length} producto(s) eliminados correctamente`);
+    cargarInventario();
+
+  } catch (err) {
+    console.error(err);
+    showToast("Error eliminando productos");
+
+  } finally {
+    hideLoader();
+  }
+}
+
+
+
+
 
 
 
@@ -2078,6 +2188,7 @@ function renderRecentProducts(hours = 48) {
       <td class="recent-product-name">${p.nombre}</td>
       <td>${p.marca}</td>
       <td style="text-align:right;">${Number(p.stock) || 0}</td>
+      <td style="text-align:center; color:#39ff14;">${p.vendidos}</td>
       <td>
         <div class="recent-date">
           <span>${fechaBonita}</span>
@@ -2506,16 +2617,54 @@ async function guardarSituacion(event) {
 
 function openMessagesModal() {
   const modal = document.getElementById("messagesModal");
-  if (!modal) return;
-
   modal.classList.remove("hidden");
 
-  // Enfoca el textarea automáticamente
-  setTimeout(() => {
-    const textarea = document.getElementById("mensajeTexto");
-    if (textarea) textarea.focus();
-  }, 100);
+  mostrarFormularioSituacion();
 }
+
+function closeMessagesModal() {
+  document.getElementById("messagesModal").classList.add("hidden");
+}
+
+function mostrarFormularioSituacion() {
+  document.getElementById("mensajeFormView").classList.remove("hidden");
+  document.getElementById("mensajeTableView").classList.add("hidden");
+}
+
+function mostrarTablaSituaciones() {
+  document.getElementById("mensajeFormView").classList.add("hidden");
+  document.getElementById("mensajeTableView").classList.remove("hidden");
+}
+
+
+async function cargarSituaciones() {
+  const res = await fetch(`${API_URL}?action=list_situaciones`);
+  const json = await res.json();
+
+  if (!json.success) return;
+
+  const tbody = document.getElementById("situacionesTableBody");
+  tbody.innerHTML = "";
+
+  json.data.forEach(s => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${s.mensaje}</td>
+      <td>${s.fecha}</td>
+      <td>${s.hora}</td>
+      <td>
+        <button class="danger ghost"
+          onclick="eliminarSituacion('${s.id}')">
+          🗑️
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
 
 function closeMessagesModal() {
   const modal = document.getElementById("messagesModal");
@@ -2555,25 +2704,17 @@ let historialData = []; // datos ya interpretados para UI
 // Mostrar / ocultar panel historial
 // --------------------------------------------------
 function toggleHistorial() {
-  const panel = document.getElementById("historialPanel");
-  const form  = document.getElementById("formPanel");
-
-  panel.classList.toggle("hidden");
-  form.classList.toggle("hidden");
-
-  // cargar solo una vez
-  if (!panel.classList.contains("loaded")) {
-    cargarHistorial();
-    panel.classList.add("loaded");
-  }
+  mostrarTablaSituaciones();
+  cargarSituaciones();
 }
+
 
 // --------------------------------------------------
 // Obtener situaciones desde Apps Script
 // --------------------------------------------------
 async function cargarHistorial() {
   try {
-    const res  = await fetch(`${API_URL}?action=list_situaciones`);
+    const res = await fetch(`${API_URL}?action=list_situaciones`);
     const json = await res.json();
 
     if (!json.success || !Array.isArray(json.data)) {
@@ -2601,13 +2742,9 @@ async function cargarHistorial() {
 function interpretarSituacion(raw) {
   return {
     id: raw.id,
-
     mensaje: limpiarTexto(raw.mensaje),
-
     tipo: interpretarTipo(raw.tipo),
-
     importancia: interpretarImportancia(raw.importancia),
-
     fecha: interpretarFecha(raw.fecha, raw.hora)
   };
 }
@@ -2695,30 +2832,34 @@ function renderHistorial() {
 // --------------------------------------------------
 // Eliminar situación
 // --------------------------------------------------
-function eliminarSituacion(id) {
-  if (!confirm("¿Eliminar esta situación?")) return;
+async function eliminarSituacion(id) {
+  const { isConfirmed } = await Swal.fire({
+    title: "Eliminar situación",
+    text: "Esta acción no se puede deshacer",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Eliminar",
+    cancelButtonText: "Cancelar"
+  });
 
-  fetch(API_URL, {
+  if (!isConfirmed) return;
+
+  await fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "delete_situacion",
       id
     })
-  })
-  .then(r => r.json())
-  .then(r => {
-    if (r.success) {
-      historialData = historialData.filter(s => s.id !== id);
-      renderHistorial();
-    }
   });
+
+  cargarSituaciones();
 }
+
 
 
 // ================================
 // MODAL HISTORIAL SITUACIONES
 // ================================
-
 function openSituacionesModal() {
   document.getElementById("situacionesModal").classList.remove("hidden");
 
