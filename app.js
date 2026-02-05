@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbx2t8FQ0u1iGzs4DkORn5iGKq4Hbt5-HAihCoHZNsen0b1X0ugBZs7_QqkZ71kq46Ik/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwfLGLAXDP92AHEJdaeGFj9Hrko15Gbia651LTtS-hGHVyNdJVvDxenQ9F-cVOFw56l/exec";
 
 
 
@@ -2210,6 +2210,530 @@ function stripPdfColumns(table) {
     });
   });
 }
+
+
+/* ==================================================
+   EXPORTAR INVENTARIO A EXCEL (HTML REAL - FRONTEND)
+================================================== */
+
+function exportInventoryTableExcel() {
+  const table = document.getElementById("inventoryTable");
+
+  if (!table) {
+    alert("No se encontró la tabla de inventario");
+    return;
+  }
+
+  // 🔹 Clonamos la tabla original
+  const tableClone = table.cloneNode(true);
+
+  // 🔹 Quitamos columnas que no deben ir a Excel
+  stripExcelColumns(tableClone);
+
+  // 🔹 Creamos un libro de Excel
+  const workbook = XLSX.utils.book_new();
+
+  // 🔹 Convertimos la tabla HTML en una hoja
+  const worksheet = XLSX.utils.table_to_sheet(tableClone, {
+    raw: true
+  });
+
+  // 🔹 Ajuste automático del ancho de columnas
+  const colWidths = [];
+  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+  rows.forEach(row => {
+    row.forEach((cell, i) => {
+      const cellLength = cell ? cell.toString().length : 10;
+      colWidths[i] = Math.max(colWidths[i] || 10, cellLength);
+    });
+  });
+
+  worksheet["!cols"] = colWidths.map(w => ({ wch: w + 2 }));
+
+  // 🔹 Nombre de la hoja
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario");
+
+  // 🔹 Nombre del archivo
+  const fileName = `Inventario_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  // 🔹 Descarga automática
+  XLSX.writeFile(workbook, fileName);
+}
+
+
+/* ==================================================
+   ELIMINAR COLUMNAS NO NECESARIAS PARA EXCEL
+================================================== */
+
+function stripExcelColumns(table) {
+  const headers = table.querySelectorAll("thead th");
+  const removeIndexes = [];
+
+  headers.forEach((th, index) => {
+    const text = th.textContent.toLowerCase();
+
+    if (
+      th.querySelector("input") || // columnas con inputs
+      text.includes("acciones")    // columna acciones
+    ) {
+      removeIndexes.push(index);
+    }
+  });
+
+  table.querySelectorAll("tr").forEach(row => {
+    [...removeIndexes].reverse().forEach(i => {
+      if (row.children[i]) {
+        row.children[i].remove();
+      }
+    });
+  });
+}
+
+
+/* ==================================================
+   EXPORTAR TABLA VENTAS A PDF
+================================================== */
+function exportSalesTablePDF() {
+  const table = document.getElementById("salesTable");
+
+  if (!table) {
+    alert("No se encontró la tabla de ventas");
+    return;
+  }
+
+  const tableClone = table.cloneNode(true);
+
+  stripSalesPdfColumns(tableClone);
+
+  tableClone.style.width = "100%";
+  tableClone.style.borderCollapse = "collapse";
+  tableClone.style.background = "#ffffff";
+  tableClone.style.color = "#000000";
+
+  tableClone.querySelectorAll("th, td").forEach(cell => {
+    cell.style.border = "1px solid #ccc";
+    cell.style.fontSize = "11px";
+    cell.style.padding = "6px";
+    cell.style.color = "#000";
+    cell.style.background = "#fff";
+  });
+
+  tableClone.querySelectorAll("th").forEach(th => {
+    th.style.background = "#f2f2f2";
+    th.style.fontWeight = "600";
+  });
+
+  const pdfContainer = document.createElement("div");
+  pdfContainer.style.padding = "20px";
+  pdfContainer.style.fontFamily = "Arial, sans-serif";
+
+  pdfContainer.innerHTML = `
+    <h2 style="margin-bottom:4px;">Ventas</h2>
+    <div style="font-size:11px; margin-bottom:12px;">
+      Generado el ${new Date().toLocaleString("es-ES")}
+    </div>
+  `;
+
+  pdfContainer.appendChild(tableClone);
+
+  html2pdf().set({
+    margin: 0.4,
+    filename: `Ventas_${new Date().toISOString().slice(0,10)}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, backgroundColor: "#ffffff" },
+    jsPDF: { unit: "in", format: "letter", orientation: "landscape" }
+  }).from(pdfContainer).save();
+}
+
+
+function stripSalesPdfColumns(table) {
+  const headers = table.querySelectorAll("thead th");
+  const removeIndexes = [];
+
+  headers.forEach((th, index) => {
+    const text = th.textContent.toLowerCase();
+    if (text.includes("acciones")) {
+      removeIndexes.push(index);
+    }
+  });
+
+  table.querySelectorAll("tr").forEach(row => {
+    [...removeIndexes].reverse().forEach(i => {
+      if (row.children[i]) row.children[i].remove();
+    });
+  });
+}
+
+
+/* ==================================================
+   EXPORTAR TABLA VENTAS A EXCEL
+================================================== */
+function exportSalesTableExcel() {
+  const table = document.getElementById("salesTable");
+
+  if (!table) {
+    alert("No se encontró la tabla de ventas");
+    return;
+  }
+
+  const tableClone = table.cloneNode(true);
+
+  stripSalesExcelColumns(tableClone);
+
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.table_to_sheet(tableClone, { raw: true });
+
+  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  worksheet["!cols"] = rows[0].map((_, i) => ({ wch: 18 }));
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Ventas");
+
+  XLSX.writeFile(
+    workbook,
+    `Ventas_${new Date().toISOString().slice(0,10)}.xlsx`
+  );
+}
+
+
+function stripSalesExcelColumns(table) {
+  const headers = table.querySelectorAll("thead th");
+  const removeIndexes = [];
+
+  headers.forEach((th, index) => {
+    const text = th.textContent.toLowerCase();
+    if (text.includes("acciones")) {
+      removeIndexes.push(index);
+    }
+  });
+
+  table.querySelectorAll("tr").forEach(row => {
+    [...removeIndexes].reverse().forEach(i => {
+      if (row.children[i]) row.children[i].remove();
+    });
+  });
+}
+
+
+
+
+/* ==================================================
+   GUARDAR MENSAJE / SITUACIÓN DEL DÍA
+================================================== */
+
+async function guardarSituacion(event) {
+  
+  // 🔹 Referencias a los campos del formulario
+  const textareaMensaje = document.getElementById("mensajeTexto");
+  const selectTipo = document.getElementById("mensajeTipo");
+  const selectImportancia = document.getElementById("mensajeImportancia");
+
+  // 🔹 Valores actuales
+  const mensaje = textareaMensaje.value.trim();
+  const tipo = selectTipo.value;
+  const importancia = selectImportancia.value;
+
+  // 🔹 Validación básica
+  if (!mensaje) {
+    alert("Escribe una situación antes de guardar");
+    textareaMensaje.focus();
+    return;
+  }
+
+  // 🔹 Payload EN JSON (CLAVE)
+  const payload = {
+    action: "add_situacion",
+    mensaje: mensaje,
+    tipo: tipo,
+    importancia: importancia,
+    autor: "Trabajador" // 👉 luego puedes hacerlo dinámico
+  };
+
+  try {
+    // 🔹 Llamada al backend (Apps Script)
+    const response = await fetch(API_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    // 🔹 Resultado
+    if (result.success) {
+      Swal.fire({
+        icon: "success",
+        title: "Guardado",
+        text: "La situación fue registrada correctamente",
+        timer: 1800,
+        showConfirmButton: false
+      });
+
+      // 🔹 Limpiar formulario
+      textareaMensaje.value = "";
+      selectTipo.value = "Nota";
+      selectImportancia.value = "1";
+
+      // 🔹 Cerrar modal
+      closeMessagesModal();
+
+      // 👉 aquí luego puedes refrescar la lista
+      // loadSituacionesDelDia();
+
+    } else {
+      throw new Error(result.message || "Error desconocido");
+    }
+
+  } catch (error) {
+    console.error("Error al guardar situación:", error);
+
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se pudo guardar la situación"
+    });
+  }
+}
+
+
+
+/* ==================================================
+   MODAL MENSAJES / SITUACIONES
+================================================== */
+
+function openMessagesModal() {
+  const modal = document.getElementById("messagesModal");
+  if (!modal) return;
+
+  modal.classList.remove("hidden");
+
+  // Enfoca el textarea automáticamente
+  setTimeout(() => {
+    const textarea = document.getElementById("mensajeTexto");
+    if (textarea) textarea.focus();
+  }, 100);
+}
+
+function closeMessagesModal() {
+  const modal = document.getElementById("messagesModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+}
+
+// Referencias
+const messagesModal = document.getElementById('messagesModal');
+const cancelBtn = document.getElementById('cancelMessageBtn');
+
+// Cerrar modal al cancelar
+cancelBtn.addEventListener('click', () => {
+  messagesModal.style.display = 'none';
+});
+
+// (Opcional) Cerrar al hacer click fuera de la tarjeta
+messagesModal.addEventListener('click', (e) => {
+  if (e.target === messagesModal) {
+    messagesModal.style.display = 'none';
+  }
+});
+
+
+// ==================================================
+// HISTORIAL DE SITUACIONES (DESDE BACKEND)
+// ==================================================
+
+// ==================================================
+// HISTORIAL DE SITUACIONES (DESDE BACKEND + UI SMART)
+// ==================================================
+
+let historialData = []; // datos ya interpretados para UI
+
+// --------------------------------------------------
+// Mostrar / ocultar panel historial
+// --------------------------------------------------
+function toggleHistorial() {
+  const panel = document.getElementById("historialPanel");
+  const form  = document.getElementById("formPanel");
+
+  panel.classList.toggle("hidden");
+  form.classList.toggle("hidden");
+
+  // cargar solo una vez
+  if (!panel.classList.contains("loaded")) {
+    cargarHistorial();
+    panel.classList.add("loaded");
+  }
+}
+
+// --------------------------------------------------
+// Obtener situaciones desde Apps Script
+// --------------------------------------------------
+async function cargarHistorial() {
+  try {
+    const res  = await fetch(`${API_URL}?action=list_situaciones`);
+    const json = await res.json();
+
+    if (!json.success || !Array.isArray(json.data)) {
+      console.error("Respuesta inválida del backend", json);
+      historialData = [];
+      renderHistorial();
+      return;
+    }
+
+    // 👉 interpretación inteligente AQUÍ
+    historialData = json.data.map(interpretarSituacion);
+
+    renderHistorial();
+
+  } catch (err) {
+    console.error("Error de conexión", err);
+    historialData = [];
+    renderHistorial();
+  }
+}
+
+// --------------------------------------------------
+// Interpretar una situación (backend → UI)
+// --------------------------------------------------
+function interpretarSituacion(raw) {
+  return {
+    id: raw.id,
+
+    mensaje: limpiarTexto(raw.mensaje),
+
+    tipo: interpretarTipo(raw.tipo),
+
+    importancia: interpretarImportancia(raw.importancia),
+
+    fecha: interpretarFecha(raw.fecha, raw.hora)
+  };
+}
+
+// --------------------------------------------------
+// Helpers de interpretación
+// --------------------------------------------------
+function limpiarTexto(texto) {
+  if (!texto || typeof texto !== "string") return "—";
+  return texto.trim();
+}
+
+function interpretarTipo(tipo) {
+  const map = {
+    Nota: "📝 Nota",
+    Venta: "💰 Venta",
+    Problema: "⚠️ Problema",
+    Cliente: "👤 Cliente",
+    Decisión: "📌 Decisión"
+  };
+  return map[tipo] || "—";
+}
+
+function interpretarImportancia(valor) {
+  if (valor == 3) return "🔴 Alta";
+  if (valor == 2) return "🟡 Media";
+  if (valor == 1) return "🟢 Baja";
+  return "—";
+}
+
+function interpretarFecha(fecha, hora) {
+  if (!fecha) return "—";
+
+  const d = new Date(fecha);
+  if (isNaN(d)) return "—";
+
+  const fechaTexto = d.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+
+  return hora ? `${fechaTexto} · ${hora}` : fechaTexto;
+}
+
+// --------------------------------------------------
+// Renderizar tabla
+// --------------------------------------------------
+function renderHistorial() {
+  const tbody = document.getElementById("historialBody");
+  tbody.innerHTML = "";
+
+  if (!historialData || historialData.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center; opacity:.6;">
+          No hay situaciones registradas
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  historialData.forEach(item => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${item.mensaje}</td>
+        <td>${item.tipo}</td>
+        <td>${item.importancia}</td>
+        <td>${item.fecha}</td>
+        <td>
+          <button
+            class="delete-btn"
+            onclick="eliminarSituacion('${item.id}')"
+            title="Eliminar"
+          >
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+// --------------------------------------------------
+// Eliminar situación
+// --------------------------------------------------
+function eliminarSituacion(id) {
+  if (!confirm("¿Eliminar esta situación?")) return;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "delete_situacion",
+      id
+    })
+  })
+  .then(r => r.json())
+  .then(r => {
+    if (r.success) {
+      historialData = historialData.filter(s => s.id !== id);
+      renderHistorial();
+    }
+  });
+}
+
+
+// ================================
+// MODAL HISTORIAL SITUACIONES
+// ================================
+
+function openSituacionesModal() {
+  document.getElementById("situacionesModal").classList.remove("hidden");
+
+  // cargar una sola vez
+  const panel = document.getElementById("situacionesModal");
+  if (!panel.classList.contains("loaded")) {
+    cargarHistorial();
+    panel.classList.add("loaded");
+  }
+}
+
+function closeSituacionesModal() {
+  document.getElementById("situacionesModal").classList.add("hidden");
+}
+
 
 
 
