@@ -1,5 +1,5 @@
  
-const API = "https://script.google.com/macros/s/AKfycbxF_CypHQhAK3FNuS34Z6_-TLxf_K3A2tzlDEFkHSX7zpMgf-Buk8oEo5EyO3_nkMef/exec";
+const API = "https://script.google.com/macros/s/AKfycbxtw-3zLbuUiH0gZ_yG-QTe2jVjUJQjcK6ahNZ9chrXcu7G4gdz53APVFKwT8rYK2t0/exec";
 
 
 /* ================================================================================================================================================================================================================================================================================================================================================================
@@ -1003,6 +1003,154 @@ async function requestPassword() {
   }
 
 });
+
+
+
+
+/* ==================================================
+   // SECCION PARA DESCARGAR INFORMES EN EXCEL O PDF 
+================================================== */
+(function initReportFilters() {
+  const monthSelect = document.getElementById("reportMonth");
+  const yearSelect = document.getElementById("reportYear");
+
+  const meses = [
+    "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+  ];
+
+  meses.forEach((m, i) => {
+    monthSelect.innerHTML += `<option value="${i}">${m}</option>`;
+  });
+
+  const year = new Date().getFullYear();
+  for (let y = year; y >= year - 5; y--) {
+    yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+  }
+})();
+
+
+/* ==================================================
+   // DESCARGAR INFORMES EN EXCEL O PDF
+================================================== */
+
+async function downloadReport(format) {
+  const sheet = document.getElementById("reportSheet").value;
+  const month = document.getElementById("reportMonth").value;
+  const year = document.getElementById("reportYear").value;
+
+  // ✅ EXCEL → igual que ahora
+  if (format === "excel") {
+    const res = await fetch(API, {
+      method: "POST",
+      body: new URLSearchParams({
+        action: "export_report",
+        sheetType: sheet,
+        format,
+        month,
+        year
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success && data.url) {
+      window.open(data.url, "_blank");
+    } else {
+      alert(data.message || "Error al generar el reporte");
+    }
+
+    return;
+  }
+
+  // ✅ PDF → HTML REAL
+  if (format === "pdf") {
+    const tableHtml = getTableHtml(sheet);
+
+    if (!tableHtml) {
+      alert("No se pudo obtener la tabla para el PDF");
+      return;
+    }
+
+    const res = await fetch(API, {
+      method: "POST",
+      body: new URLSearchParams({
+        action: "export_report",
+        format: "pdf",
+        sheetType: sheet,
+        month,
+        year,
+        html: tableHtml
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success && data.url) {
+      window.open(data.url, "_blank");
+    } else {
+      alert(data.message || "Error al generar el PDF");
+    }
+  }
+}
+
+
+
+function exportPdfFromHtml(data) {
+  const htmlTable = data.html;
+  const sheetType = data.sheetType;
+
+  if (!htmlTable) {
+    return json({ success:false, message:"HTML vacío" });
+  }
+
+  const template = HtmlService.createTemplateFromFile("pdf_template");
+
+  template.table = htmlTable;
+  template.title =
+    sheetType === "ventas"
+      ? "Reporte de Ventas"
+      : "Reporte de Inventario";
+
+  const htmlOutput = template.evaluate()
+    .setSandboxMode(HtmlService.SandboxMode.IFRAME);
+
+  const pdfBlob = htmlOutput
+    .getAs("application/pdf")
+    .setName(`Reporte_${sheetType}.pdf`);
+
+  const file = DriveApp.createFile(pdfBlob);
+
+  return json({
+    success: true,
+    url: file.getUrl()
+  });
+}
+
+
+
+/* ==================================================
+   // DESCARGAR INFORMES EN EXCEL O PDF
+================================================== */
+
+function getTableHtml(sheetType) {
+  if (sheetType === "inventario") {
+    return document.querySelector("#inventoryTable")?.outerHTML || "";
+  }
+
+  if (sheetType === "ventas") {
+    return document.querySelector("#salesTable")?.outerHTML || "";
+  }
+
+  return "";
+}
+
+
+
+
+
+
+
 
 
 
