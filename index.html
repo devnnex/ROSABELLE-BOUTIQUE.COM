@@ -69,7 +69,7 @@
         <div class="sell-cart-wrapper"><button class="primary venderSeleccionados" id="btnSellCart" onclick="venderSeleccionados()">Vender seleccionados</button><span id="sellCartBadge" class="sell-cart-badge hidden">0</span></div>
         <button class="outline">Eliminar Seleccionados (0)</button>
         <button class="outline" onclick="exportInventoryTablePDF()">Exportar PDF</button>
-        <button class="outline">Exportar Excel</button>
+        <button class="outline" onclick="exportInventoryTableExcel()">Exportar Excel</button>
       </div>
     </div>
 
@@ -149,6 +149,22 @@
   <select id="filterMetodo2">
     <option value="">Todos los métodos 2</option>
   </select>
+  <button
+  id="btnDownloadSalesPDF"
+  class="outline"
+  onclick="exportSalesTablePDF()"
+>
+  📄 Descargar PDF
+</button>
+
+<button
+  id="btnDownloadSalesExcel"
+  class="outline"
+  onclick="exportSalesTableExcel()"
+>
+  📊 Descargar Excel
+</button>
+
   </div>
 
     <section class="glass fade">
@@ -183,7 +199,7 @@
   <!-- =========================
   REPORTES
 ========================= -->
-<div class="analysis-card report-card">
+<!-- <div class="analysis-card report-card">
 
   <h3>📊 Reportes</h3>
 
@@ -194,25 +210,25 @@
       <option value="ventas">Ventas</option>
     </select>
 
-    <!-- <select id="reportMonth">
+    <select id="reportMonth">
       <option value="">Todos los meses</option>
-    </select> -->
+    </select>  
 
-    <!-- <select id="reportYear">
+    <select id="reportYear">
       <option value="">Todos los años</option>
-    </select> -->
+    </select>
 
     <button class="btn-report excel" onclick="downloadReport('excel')">
       📥 Excel
     </button>
 
-    <!-- <button class="btn-report pdf" onclick="downloadReport('pdf')">
+      <button class="btn-report pdf" onclick="downloadReport('pdf')">
       📄 PDF
-    </button> -->
+    </button>
 
   </div>
 
-</div>
+</div> -->
 
 
   <!-- HEADER -->
@@ -578,6 +594,110 @@
 </div>
 
 
+<!-- =========================
+  MODAL MENSAJES / SITUACIONES
+========================= -->
+<div class="modal hidden" id="messagesModal">
+  <form class="modal-card" onsubmit="guardarSituacion(event)">
+    
+    <h2>💬 Mensajes del día</h2>
+
+    <button
+    type="button"
+    class="history-btn"
+    title="Ver historial"
+    onclick="toggleHistorial()"
+  >
+    🕒
+  </button>
+
+    <!-- MENSAJE -->
+    <div class="field-group">
+      <label for="mensajeTexto">Situación / Nota</label>
+      <textarea
+        id="mensajeTexto"
+        rows="5"
+        placeholder="Describe la situación del día..."
+        required
+      ></textarea>
+    </div>
+
+    <!-- SELECTS -->
+    <div class="field-row">
+
+      <div class="field-group">
+        <label for="mensajeTipo">Tipo de mensaje</label>
+        <select id="mensajeTipo">
+          <option value="Nota">Nota</option>
+          <option value="Venta">Venta</option>
+          <option value="Problema">Problema</option>
+          <option value="Cliente">Cliente</option>
+          <option value="Decisión">Decisión</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label for="mensajeImportancia">Importancia</label>
+        <select id="mensajeImportancia">
+          <option value="1">Baja</option>
+          <option value="2">Media</option>
+          <option value="3">Alta</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- ACCIONES -->
+    <div class="modal-actions">
+      <button type="button" class="ghost" onclick="closeMessagesModal()">
+        Cancelar
+      </button>
+      <button type="submit">
+        Guardar
+      </button>
+    </div>
+
+  </form>
+</div>
+
+
+
+<!-- =========================
+  MODAL HISTORIAL DE SITUACIONES
+========================= -->
+<div class="modal hidden" id="situacionesModal">
+
+  <div class="modal-card situaciones-card">
+
+    <!-- HEADER -->
+    <div class="situaciones-header">
+      <h2>📋 Historial de situaciones</h2>
+      <button class="ghost" onclick="closeSituacionesModal()">Cerrar</button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="situaciones-table-wrapper">
+      <table class="situaciones-table">
+        <thead>
+          <tr>
+            <th>Mensaje</th>
+            <th>Tipo</th>
+            <th>Importancia</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="historialBody">
+          <!-- JS renderiza -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+
+
 
 
 
@@ -609,6 +729,31 @@
   
 </button>
 
+<!-- ===============================
+     BOTÓN FLOTANTE SITUACIONES DEL DÍA
+=============================== -->
+<button
+  class="sell-floating sell-floating-messages"
+  onclick="openMessagesModal()"
+  aria-label="Situaciones del día"
+>
+  💭
+</button>
+
+<!-- ===============================
+    BOTON FLOATING HISTORIAL DE SITUACIONES
+=============================== -->
+
+<!-- <button
+  class="sell-floating sell-floating-situations"
+  onclick="openSituacionesModal()"
+  aria-label="Historial de situaciones"
+>
+  📚
+</button> -->
+
+
+
 
 
 
@@ -620,8 +765,10 @@
 </footer>
 
 
-<!-- JS -->
+<!-- JS CDN PDF AND EXCEL-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<!-- JS CDN FOR EMAIL JS-->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>
     emailjs.init("WG36JQzyb-sxnapxf"); // 👈 Reemplaza con tu Public Key de EmailJS
@@ -629,6 +776,7 @@
 <!-- ✅ SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ✅ LOCAL FILES  -->
 <script src="analisis.js" defer></script>
 <script src="app.js" defer></script>
 
