@@ -44,7 +44,7 @@
   <nav class="nav-menu">
     <a class="active" data-view="inventario">Inventario</a>
     <a data-view="ventas">Ventas</a>
-    <a data-view="analisis">Análisis</a>
+    <!-- <a data-view="analisis">Análisis</a> -->
     <!-- <a data-view="agotados">Agotados</a> -->
     <a data-view="clientes">Clientes</a>
   </nav>
@@ -67,7 +67,8 @@
       <div class="page-actions">
         <button id="btnNuevo" class="primary">+ Agregar Producto</button>
         <div class="sell-cart-wrapper"><button class="primary venderSeleccionados" id="btnSellCart" onclick="venderSeleccionados()">Vender seleccionados</button><span id="sellCartBadge" class="sell-cart-badge hidden">0</span></div>
-        <button class="outline">Eliminar Seleccionados (0)</button>
+        <button id="btnDeleteInventorySelected" class="outline" disabled>Eliminar seleccionados (0)</button>
+
         <button class="outline" onclick="exportInventoryTablePDF()">Exportar PDF</button>
         <button class="outline" onclick="exportInventoryTableExcel()">Exportar Excel</button>
       </div>
@@ -90,7 +91,7 @@
       <table id="inventoryTable">
         <thead>
           <tr>
-            <th><input type="checkbox"></th>
+            <th><input type="checkbox" id="selectAllInventory"></th>
             <th>Producto</th>
             <th>Marca</th>
             <th>Precio Venta</th>
@@ -575,6 +576,7 @@
           <th>Producto</th>
           <th>Marca</th>
           <th>Stock</th>
+          <th>Vendidos</th>
           <th>Fecha</th>
         </tr>
       </thead>
@@ -601,6 +603,39 @@
   <form class="modal-card" onsubmit="guardarSituacion(event)">
     
     <h2>💬 Mensajes del día</h2>
+
+    <!-- FORMULARIO -->
+<div id="mensajeFormView">
+  <!-- TODO lo que ya tienes -->
+</div>
+
+<!-- HISTORIAL -->
+<div id="mensajeTableView" class="hidden">
+
+  <h2>📋 Historial de situaciones</h2>
+
+  <div class="table-wrapper">
+    <table class="situaciones-table">
+      <thead>
+        <tr>
+          <th>Mensaje</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="situacionesTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="modal-actions">
+    <button class="ghost" onclick="volverFormularioSituacion()">
+      Volver
+    </button>
+  </div>
+
+</div>
+
 
     <button
     type="button"
