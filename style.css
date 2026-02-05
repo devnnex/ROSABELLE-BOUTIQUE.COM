@@ -2635,6 +2635,67 @@ th input[type="checkbox"] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* 🔥 por encima de TODO */
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-card {
+  animation: fadeIn .25s ease;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+
+
 /* BADGE NOTAS */
 /* .sell-floating-notes .sell-cart-badge {
   background: #ffffff;
