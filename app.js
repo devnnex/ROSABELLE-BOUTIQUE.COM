@@ -2414,13 +2414,14 @@ function exportSalesTablePDF() {
   }
 
   const tableClone = table.cloneNode(true);
-
   stripSalesPdfColumns(tableClone);
 
+  /* === ESTILOS GENERALES === */
   tableClone.style.width = "100%";
   tableClone.style.borderCollapse = "collapse";
   tableClone.style.background = "#ffffff";
   tableClone.style.color = "#000000";
+  tableClone.style.tableLayout = "fixed";
 
   tableClone.querySelectorAll("th, td").forEach(cell => {
     cell.style.border = "1px solid #ccc";
@@ -2428,6 +2429,7 @@ function exportSalesTablePDF() {
     cell.style.padding = "6px";
     cell.style.color = "#000";
     cell.style.background = "#fff";
+    cell.style.overflowWrap = "break-word";
   });
 
   tableClone.querySelectorAll("th").forEach(th => {
@@ -2435,9 +2437,37 @@ function exportSalesTablePDF() {
     th.style.fontWeight = "600";
   });
 
+  /* === FORZAR SALTO DE LÍNEA EN PRODUCTO Y FECHA === */
+  const headers = tableClone.querySelectorAll("thead th");
+  let productoIndex = -1;
+  let fechaIndex = -1;
+
+  headers.forEach((th, index) => {
+    const text = th.textContent.toLowerCase();
+    if (text.includes("producto")) productoIndex = index;
+    if (text.includes("fecha")) fechaIndex = index;
+  });
+
+  tableClone.querySelectorAll("tbody tr").forEach(row => {
+    if (row.children[productoIndex]) {
+      row.children[productoIndex].style.whiteSpace = "normal";
+      row.children[productoIndex].style.wordBreak = "break-word";
+      row.children[productoIndex].style.lineHeight = "1.3";
+    }
+    if (row.children[fechaIndex]) {
+      row.children[fechaIndex].style.whiteSpace = "normal";
+      row.children[fechaIndex].style.wordBreak = "break-word";
+      row.children[fechaIndex].style.lineHeight = "1.3";
+    }
+  });
+
+  /* === CONTENEDOR PDF === */
   const pdfContainer = document.createElement("div");
   pdfContainer.style.padding = "20px";
   pdfContainer.style.fontFamily = "Arial, sans-serif";
+  pdfContainer.style.background = "#ffffff";
+  pdfContainer.style.color = "#000000";
+  pdfContainer.style.overflow = "visible";
 
   pdfContainer.innerHTML = `
     <h2 style="margin-bottom:4px;">Ventas</h2>
@@ -2448,12 +2478,21 @@ function exportSalesTablePDF() {
 
   pdfContainer.appendChild(tableClone);
 
+  /* === EXPORT === */
   html2pdf().set({
-    margin: 0.4,
+    margin: [0.6, 0.4, 0.6, 0.4],
     filename: `Ventas_${new Date().toISOString().slice(0,10)}.pdf`,
     image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, backgroundColor: "#ffffff" },
-    jsPDF: { unit: "in", format: "letter", orientation: "landscape" }
+    html2canvas: {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true
+    },
+    jsPDF: {
+      unit: "in",
+      format: "letter",
+      orientation: "landscape"
+    }
   }).from(pdfContainer).save();
 }
 
@@ -2985,6 +3024,7 @@ function closeSituacionesModal() {
 //     setTimeout(() => toast.remove(), 300);
 //   }, 3000);
 // }
+
 
 
 
