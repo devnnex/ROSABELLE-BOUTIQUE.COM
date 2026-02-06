@@ -2263,8 +2263,17 @@ function updateNotesBadge(count) {
 
 
 /* ==================================================
-   EXPORTAR INVENTARIO A PDF (HTML PURO – FIX MOBILE)
+   EXPORTAR TABLA INVENTARIO A PDF (HTML REAL)
 ================================================== */
+
+/* ==================================================
+   EXPORTAR INVENTARIO A PDF (HTML PURO)
+================================================== */
+
+/* ==================================================
+   EXPORTAR INVENTARIO A PDF (HTML PURO - BLANCO)
+================================================== */
+
 function exportInventoryTablePDF() {
   const table = document.getElementById("inventoryTable");
 
@@ -2273,18 +2282,13 @@ function exportInventoryTablePDF() {
     return;
   }
 
-  // 🔹 Clonamos la tabla
   const tableClone = table.cloneNode(true);
-
-  // 🔹 Quitamos columnas que no sirven en PDF
   stripPdfColumns(tableClone);
 
-  // 🔹 Forzamos estilos de tabla para PDF
-  tableClone.style.width = "1200px";
+  tableClone.style.width = "100%";
   tableClone.style.borderCollapse = "collapse";
   tableClone.style.background = "#ffffff";
   tableClone.style.color = "#000000";
-  tableClone.style.tableLayout = "fixed";
 
   tableClone.querySelectorAll("th, td").forEach(cell => {
     cell.style.color = "#000";
@@ -2292,8 +2296,6 @@ function exportInventoryTablePDF() {
     cell.style.border = "1px solid #ccc";
     cell.style.fontSize = "12px";
     cell.style.padding = "6px 8px";
-    cell.style.whiteSpace = "normal";
-    cell.style.wordBreak = "break-word";
   });
 
   tableClone.querySelectorAll("th").forEach(th => {
@@ -2301,15 +2303,13 @@ function exportInventoryTablePDF() {
     th.style.fontWeight = "600";
   });
 
-  // 🔹 Contenedor PDF (FORZADO DESKTOP)
   const pdfContainer = document.createElement("div");
-  pdfContainer.style.width = "1200px";
-  pdfContainer.style.maxWidth = "none";
   pdfContainer.style.background = "#ffffff";
   pdfContainer.style.color = "#000000";
   pdfContainer.style.padding = "20px";
   pdfContainer.style.fontFamily = "Arial, sans-serif";
-  pdfContainer.style.overflow = "visible";
+  pdfContainer.style.width = "1200px";     // ✅ FIX MOBILE
+  pdfContainer.style.maxWidth = "none";    // ✅ FIX MOBILE
 
   pdfContainer.innerHTML = `
     <h2 style="margin:0 0 4px 0; color:#000;">Inventario</h2>
@@ -2320,16 +2320,14 @@ function exportInventoryTablePDF() {
 
   pdfContainer.appendChild(tableClone);
 
-  // 🔹 Export PDF (FIX MOBILE)
   html2pdf().set({
-    margin: [0.6, 0.4, 0.6, 0.4],
+    margin: 0.4,
     filename: `Inventario_${new Date().toISOString().slice(0,10)}.pdf`,
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: {
-      scale: 3,
+      scale: 2,
       backgroundColor: "#ffffff",
-      useCORS: true,
-      windowWidth: 1200
+      windowWidth: 1200      // ✅ FIX MOBILE
     },
     jsPDF: {
       unit: "in",
@@ -2340,31 +2338,36 @@ function exportInventoryTablePDF() {
 }
 
 
-/* ==================================================
-   STRIP COLUMNAS PDF INVENTARIO
-================================================== */
+
+
 function stripPdfColumns(table) {
   const headers = table.querySelectorAll("thead th");
   const removeIndexes = [];
 
   headers.forEach((th, index) => {
     const text = th.textContent.toLowerCase();
-    if (th.querySelector("input") || text.includes("acciones")) {
+    if (
+      th.querySelector("input") ||
+      text.includes("acciones")
+    ) {
       removeIndexes.push(index);
     }
   });
 
   table.querySelectorAll("tr").forEach(row => {
     [...removeIndexes].reverse().forEach(i => {
-      if (row.children[i]) row.children[i].remove();
+      if (row.children[i]) {
+        row.children[i].remove();
+      }
     });
   });
 }
 
 
 /* ==================================================
-   EXPORTAR INVENTARIO A EXCEL (SIN CAMBIOS)
+   EXPORTAR INVENTARIO A EXCEL (HTML REAL - FRONTEND)
 ================================================== */
+
 function exportInventoryTableExcel() {
   const table = document.getElementById("inventoryTable");
 
@@ -2373,12 +2376,21 @@ function exportInventoryTableExcel() {
     return;
   }
 
+  // 🔹 Clonamos la tabla original
   const tableClone = table.cloneNode(true);
+
+  // 🔹 Quitamos columnas que no deben ir a Excel
   stripExcelColumns(tableClone);
 
+  // 🔹 Creamos un libro de Excel
   const workbook = XLSX.utils.book_new();
-  const worksheet = XLSX.utils.table_to_sheet(tableClone, { raw: true });
 
+  // 🔹 Convertimos la tabla HTML en una hoja
+  const worksheet = XLSX.utils.table_to_sheet(tableClone, {
+    raw: true
+  });
+
+  // 🔹 Ajuste automático del ancho de columnas
   const colWidths = [];
   const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
@@ -2390,17 +2402,49 @@ function exportInventoryTableExcel() {
   });
 
   worksheet["!cols"] = colWidths.map(w => ({ wch: w + 2 }));
+
+  // 🔹 Nombre de la hoja
   XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario");
 
-  XLSX.writeFile(
-    workbook,
-    `Inventario_${new Date().toISOString().slice(0,10)}.xlsx`
-  );
+  // 🔹 Nombre del archivo
+  const fileName = `Inventario_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  // 🔹 Descarga automática
+  XLSX.writeFile(workbook, fileName);
 }
 
 
 /* ==================================================
-   EXPORTAR TABLA VENTAS A PDF (FIX MOBILE)
+   ELIMINAR COLUMNAS NO NECESARIAS PARA EXCEL
+================================================== */
+
+function stripExcelColumns(table) {
+  const headers = table.querySelectorAll("thead th");
+  const removeIndexes = [];
+
+  headers.forEach((th, index) => {
+    const text = th.textContent.toLowerCase();
+
+    if (
+      th.querySelector("input") || // columnas con inputs
+      text.includes("acciones")    // columna acciones
+    ) {
+      removeIndexes.push(index);
+    }
+  });
+
+  table.querySelectorAll("tr").forEach(row => {
+    [...removeIndexes].reverse().forEach(i => {
+      if (row.children[i]) {
+        row.children[i].remove();
+      }
+    });
+  });
+}
+
+
+/* ==================================================
+   EXPORTAR TABLA VENTAS A PDF
 ================================================== */
 function exportSalesTablePDF() {
   const table = document.getElementById("salesTable");
@@ -2413,7 +2457,7 @@ function exportSalesTablePDF() {
   const tableClone = table.cloneNode(true);
   stripSalesPdfColumns(tableClone);
 
-  tableClone.style.width = "1200px";
+  tableClone.style.width = "100%";
   tableClone.style.borderCollapse = "collapse";
   tableClone.style.background = "#ffffff";
   tableClone.style.color = "#000000";
@@ -2425,8 +2469,7 @@ function exportSalesTablePDF() {
     cell.style.padding = "6px";
     cell.style.color = "#000";
     cell.style.background = "#fff";
-    cell.style.whiteSpace = "normal";
-    cell.style.wordBreak = "break-word";
+    cell.style.overflowWrap = "break-word";
   });
 
   tableClone.querySelectorAll("th").forEach(th => {
@@ -2435,13 +2478,13 @@ function exportSalesTablePDF() {
   });
 
   const pdfContainer = document.createElement("div");
-  pdfContainer.style.width = "1200px";
-  pdfContainer.style.maxWidth = "none";
   pdfContainer.style.padding = "20px";
   pdfContainer.style.fontFamily = "Arial, sans-serif";
   pdfContainer.style.background = "#ffffff";
   pdfContainer.style.color = "#000000";
   pdfContainer.style.overflow = "visible";
+  pdfContainer.style.width = "1200px";     // ✅ FIX MOBILE
+  pdfContainer.style.maxWidth = "none";    // ✅ FIX MOBILE
 
   pdfContainer.innerHTML = `
     <h2 style="margin-bottom:4px;">Ventas</h2>
@@ -2457,10 +2500,10 @@ function exportSalesTablePDF() {
     filename: `Ventas_${new Date().toISOString().slice(0,10)}.pdf`,
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: {
-      scale: 3,
+      scale: 2,
       backgroundColor: "#ffffff",
       useCORS: true,
-      windowWidth: 1200
+      windowWidth: 1200      // ✅ FIX MOBILE
     },
     jsPDF: {
       unit: "in",
@@ -2469,6 +2512,75 @@ function exportSalesTablePDF() {
     }
   }).from(pdfContainer).save();
 }
+
+
+function stripSalesPdfColumns(table) {
+  const headers = table.querySelectorAll("thead th");
+  const removeIndexes = [];
+
+  headers.forEach((th, index) => {
+    const text = th.textContent.toLowerCase();
+    if (text.includes("acciones")) {
+      removeIndexes.push(index);
+    }
+  });
+
+  table.querySelectorAll("tr").forEach(row => {
+    [...removeIndexes].reverse().forEach(i => {
+      if (row.children[i]) row.children[i].remove();
+    });
+  });
+}
+
+
+/* ==================================================
+   EXPORTAR TABLA VENTAS A EXCEL
+================================================== */
+function exportSalesTableExcel() {
+  const table = document.getElementById("salesTable");
+
+  if (!table) {
+    alert("No se encontró la tabla de ventas");
+    return;
+  }
+
+  const tableClone = table.cloneNode(true);
+
+  stripSalesExcelColumns(tableClone);
+
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.table_to_sheet(tableClone, { raw: true });
+
+  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  worksheet["!cols"] = rows[0].map((_, i) => ({ wch: 18 }));
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Ventas");
+
+  XLSX.writeFile(
+    workbook,
+    `Ventas_${new Date().toISOString().slice(0,10)}.xlsx`
+  );
+}
+
+
+function stripSalesExcelColumns(table) {
+  const headers = table.querySelectorAll("thead th");
+  const removeIndexes = [];
+
+  headers.forEach((th, index) => {
+    const text = th.textContent.toLowerCase();
+    if (text.includes("acciones")) {
+      removeIndexes.push(index);
+    }
+  });
+
+  table.querySelectorAll("tr").forEach(row => {
+    [...removeIndexes].reverse().forEach(i => {
+      if (row.children[i]) row.children[i].remove();
+    });
+  });
+}
+
 
 
 
@@ -2929,6 +3041,7 @@ function closeSituacionesModal() {
 //     setTimeout(() => toast.remove(), 300);
 //   }, 3000);
 // }
+
 
 
 
