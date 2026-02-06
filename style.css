@@ -43,22 +43,38 @@ body {
 }
 
 /* ===============================
+   TABLE WRAPPER (CENTRADO REAL)
+=============================== */
+.table-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0 24px 40px;
+  box-sizing: border-box;
+}
+
+/* ===============================
    TABLE BASE
 =============================== */
 .glass {
-  margin: 0 40px 40px;
+  width: 100%;
+  max-width: 1400px;          /* 👈 controla el ancho visual */
   padding: 20px;
   background: var(--glass);
   backdrop-filter: blur(24px);
   border-radius: 24px;
   border: 1px solid var(--border);
-  overflow-x: auto; /* 👈 clave mobile */
+  overflow-x: auto;           /* 👈 clave mobile */
+  box-sizing: border-box;
 }
 
+/* ===============================
+   TABLE
+=============================== */
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 720px; /* evita romper columnas */
+  min-width: 720px;           /* evita romper columnas */
 }
 
 th {
@@ -75,7 +91,7 @@ td {
 }
 
 /* ===============================
-   BUTTONS
+   ACTION BUTTONS
 =============================== */
 .actions {
   display: flex;
@@ -91,11 +107,17 @@ td {
   padding: 6px 10px;
   border-radius: 10px;
   cursor: pointer;
+  transition: background .2s ease, border .2s ease;
+}
+
+.actions button:hover {
+  border-color: var(--accent);
 }
 
 .actions button.sell {
   background: var(--accent);
   border: none;
+  color: white;
 }
 
 /* ===============================
@@ -2638,30 +2660,6 @@ th input[type="checkbox"] {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .modal {
   position: fixed;
   inset: 0;
@@ -2693,6 +2691,38 @@ th input[type="checkbox"] {
   }
 }
 
+
+
+
+
+.inventory-filter {
+  background: #0f0f0f;
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,.2);
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  min-width: 200px;
+  margin-bottom: 20px;
+  transition: border .2s ease, box-shadow .2s ease;
+}
+
+.inventory-filter:hover {
+  border-color: #0a84ff;
+}
+
+.inventory-filter:focus {
+  border-color: #0a84ff;
+  box-shadow: 0 0 0 2px rgba(10,132,255,.25);
+}
+
+.inventory-filter option {
+  background: #0f0f0f;
+  color: #ffffff;
+}
 
 
 
