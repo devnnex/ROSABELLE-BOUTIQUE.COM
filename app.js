@@ -333,9 +333,55 @@ rowChecks.forEach(check => {
 if (selectAllInventory) selectAllInventory.checked = false;
 updateDeleteSelectedUI();
 
+  // ======================
+//  FILTRO DE INVENTARIO
+// ======================
+if (inventoryFilter) {
+  aplicarFiltroInventario();
+}
+
 }
 
 cargarInventario();
+
+
+
+// PRUEBA DE FILTRO DE INVENTARIO
+const inventoryFilter = document.getElementById("inventoryFilter");
+
+if (inventoryFilter) {
+  inventoryFilter.addEventListener("change", aplicarFiltroInventario);
+}
+
+// PRUEBA DE FILTRO DE INVENTARIO
+function aplicarFiltroInventario() {
+  const value = inventoryFilter.value;
+  const rows = tbody.querySelectorAll("tr");
+
+  rows.forEach(row => {
+    const id = row.dataset.id;
+    const stock = stockState[id] ?? 0;
+    const esNuevo = row.classList.contains("row-new");
+
+    let mostrar = true;
+
+    switch (value) {
+      case "new":
+        mostrar = esNuevo;
+        break;
+
+      case "out":
+        mostrar = stock <= 0;
+        break;
+
+      case "all":
+      default:
+        mostrar = true;
+    }
+
+    row.style.display = mostrar ? "" : "none";
+  });
+}
 
 
 // FUNCIONALIDAD SELECT ALL INVENTORY
@@ -3024,7 +3070,6 @@ function closeSituacionesModal() {
 //     setTimeout(() => toast.remove(), 300);
 //   }, 3000);
 // }
-
 
 
 
