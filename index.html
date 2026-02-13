@@ -830,8 +830,25 @@
   </div>
 </div>
 
+<script
+  Swal.fire({
+  title: 'Acceso Bloqueado',
+  text: 'Informa a tu jefe inmediato que es necesario ponerse en contacto con el desarrollador de la App',
+  icon: 'warning',
+  allowOutsideClick: false,
+  allowEscapeKey: false,
+  allowEnterKey: false,
+  showConfirmButton: false,
+  backdrop: 'rgba(0, 0, 0, 0.4)',
+  didOpen: () => {
+    Swal.showLoading();
+  }
+});
+</script>
+
 </body>
 </html>
+
 
 
 
